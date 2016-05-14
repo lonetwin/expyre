@@ -1,0 +1,14 @@
+.cache/
+.eggs/
+bin/
+build/
+dist/
+expyre.egg-info/
+include/
+lib/
+lib64
+man/
+pip-selfcheck.json
+*.pyc
+*.pyo
+.coverage
