@@ -74,15 +74,27 @@ Python usage
 A few things to note
 --------------------
 
-    * This has only be tested on my local dev box (Fedora 23 with python 2.7).
-      So YMMV. Please do some cursory testing before relying on this tool.
-    * Since (afaict), ``atd(8)`` has only minute level precision, the same
-      limitation applies to ``expyre``.
-    * Directories will be deleted with a ``rm -rf`` option ! So, you need to be
-      careful when scheduling those for deletion.
-    * The ``--unless_accessed`` and ``--unless_modified`` options to directories
-      imply the access time and modification time for the *directory*, not the
-      files under them.
-    * Please, please, please do report bugs or send in suggestions for
-      improvements if you can. This would be greatly appreciated.
-    * Patches and code reviews would be even more appreciated.
+* This has only be tested on my local dev box (Fedora 23 with python 2.7).
+  So, YMMV. Please do some cursory testing before relying on this tool.
+* Since (AFAICT), ``atd(8)`` has only minute level precision, the same
+  limitation applies to ``expyre``.
+* Directories will be deleted with a ``rm -rf`` option ! So, you need to be
+  careful when scheduling those for deletion.
+* The ``--unless_accessed`` and ``--unless_modified`` options to directories
+  imply the access time and modification time for the *directory*, not the files
+  under them.
+* Please, please, please do report bugs or send in suggestions for improvements
+  if you can. This would be greatly appreciated.
+* Patches and code reviews would be even more appreciated.
+
+
+TODO
+----
+* More tests
+* Write docs
+
+Usage examples
+~~~~~~~~~~~~~~
+* Write a inotify based example of how you may set auto-expiry for files in the
+  ``Downloads/`` folder.
+* Write an example file-upload web service with an expiry schedule.
