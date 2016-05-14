@@ -22,33 +22,54 @@ Command line usage
 ::
 
     # - schedule a file for deletion 2 days from now
-    $ expyre -p path/to/file @now + 2days
-    [206] /home/steve/src/venvs/expyre/path/to/file will expire at 2016-05-16 15:52
+    $ expyre -p path/to/file0 @now + 2days
+    [212] /home/steve/src/venvs/expyre/path/to/file0 will expire at 2016-05-16 19:10
 
-    # - schedule a file for deletion 2 days from now, unless it is modified before then
-    $ expyre --unless-modified -p path/to/another_file @now + 2days
-    [207] /home/steve/src/venvs/expyre/path/to/another_file will expire at 2016-05-16 15:53
+    # - schedule a file for deletion a minute befor new year 2018
+    $ expyre --unless-modified -p path/to/file1 @23:59 2017-12-31
+    [213] /home/steve/src/venvs/expyre/path/to/file1 will expire at 2017-12-31 23:59
 
     # - list the current expiry schedule
     $ expyre -l
-    /home/steve/src/venvs/expyre/path/to/another_file scheduled to expire at 2016-05-16 15:53 unless modified after 15:53 2016-05-14
-    /home/steve/src/venvs/expyre/path/to/file scheduled to expire at 2016-05-16 15:52
+    /home/steve/src/venvs/expyre/path/to/file1 scheduled to expire at 2017-01-01 19:07 unless modified after 19:07 2016-05-14
+    /home/steve/src/venvs/expyre/path/to/file0 scheduled to expire at 2016-05-16 19:10
 
     # - remove a file from the expiry schedule
-    $ expyre -r /home/steve/src/venvs/expyre/path/to/file
+    $ expyre -r /home/steve/src/venvs/expyre/path/to/file0
     Successfully removed these paths from expiry list:
-    /home/steve/src/venvs/expyre/path/to/file
-
+    /home/steve/src/venvs/expyre/path/to/file0
 
 Python usage
 
 .. code:: python
 
+    from datetime import datetime, timedelta
+    from expyre.helpers import *
+
+    # - as a contextmanager
     filename = '/path/to/file'
     with open_expiring(filename, 'w', at='now + 3days', unless_accessed=True) as fd:
         # - create a file with a scheduled deletion time exactly 3 days from
         # time of creation unless it has been accessed before the deletion time.
         ...
+
+    # - schedule a file for deletion providing time as a string
+    expire_path('./path/to/file0', 'now + 2days')
+    JobSpec(job_id='216', path='/home/steve/src/venvs/expyre/path/to/file0', timestamp=datetime.datetime(2016, 5, 16, 19, 20), conditions='unless accessed after 19:20 2016-05-14 or unless modified after 19:20 2016-05-14')
+
+    # - schedule a file for deletion providing time as a datetime object
+    expire_path('./path/to/file1', (datetime.now() + timedelta(days=3)), unless_modified=True)
+    JobSpec(job_id='217', path='/home/steve/src/venvs/expyre/path/to/file1', timestamp=datetime.datetime(2016, 5, 17, 19, 20), conditions='unless accessed after 19:20 2016-05-14 or unless modified after 19:20 2016-05-14')
+
+    # - Get the expiry schedule as a dict
+    get_scheduled_jobs()
+    {'/home/steve/src/venvs/expyre/path/to/file0': JobSpec(job_id='216', path='/home/steve/src/venvs/expyre/path/to/file0', timestamp=datetime.datetime(2016, 5, 16, 19, 20), conditions='unless accessed after 19:20 2016-05-14 or unless modified after 19:20 2016-05-14'),
+     '/home/steve/src/venvs/expyre/path/to/file1': JobSpec(job_id='217', path='/home/steve/src/venvs/expyre/path/to/file1', timestamp=datetime.datetime(2016, 5, 17, 19, 20), conditions='unless accessed after 19:20 2016-05-14 or unless modified after 19:20 2016-05-14')}
+
+    # - remove a file from the expiry schedule
+    remove_from_schedule(['/home/steve/src/venvs/expyre/path/to/file0'])
+    (['/home/steve/src/venvs/expyre/path/to/file0'], [])
+
 
 A few things to note
 --------------------

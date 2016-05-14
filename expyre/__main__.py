@@ -73,10 +73,10 @@ def main(args=None):
         # - remove path from expiry schedule
         success, faliure = remove_from_schedule(args.reset)
         print('Successfully removed these paths from expiry list:')
-        print('\n\t'.join(success))
+        print('\n'.join(success))
         if faliure:
             print('Failed to remove these paths from expiry list:')
-            print('\n\t'.join(faliure))
+            print('\n'.join(faliure))
         ret = (0 if not faliure else -1)
     else:
         # - schedule path for expiry
