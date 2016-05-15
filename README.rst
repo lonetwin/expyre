@@ -83,6 +83,9 @@ A few things to note
 * The ``--unless_accessed`` and ``--unless_modified`` options to directories
   imply the access time and modification time for the *directory*, not the files
   under them.
+* Currently no checks are done to see whether there is already an existing job
+  for a path being scheduled for deletion. I am not yet convinced that this is
+  really necessary to be done as a default action.
 * Please, please, please do report bugs or send in suggestions for improvements
   if you can. This would be greatly appreciated.
 * Patches and code reviews would be even more appreciated.
