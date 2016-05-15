@@ -17,7 +17,11 @@ def _parse_args(args):
                 usage="\n  %(prog)s [-h] [--version]"
                       "\n  %(prog)s [-m] [-a] -p path @TIMESPEC"
                       "\n  %(prog)s -l"
-                      "\n  %(prog)s -r path")
+                      "\n  %(prog)s -r path",
+                epilog="Timespec eg: "
+                       "now+2days, 18:00 tomorrow, 18:00 2017-12-31, 5pm Friday"
+                       )
+
     parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
     at_group = parser.add_argument_group('Options for scheduling path expiry')
     atq_group = parser.add_argument_group('Options to query paths scheduled for expiry')
