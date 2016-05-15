@@ -6,4 +6,4 @@ https://github.com/lonetwin/expyre
 
 __author__ = "Steven Fernandez <steve@lonetwin.net>"
 __license__ = "MIT"
-__version__ = "0.1.1"
+__version__ = "0.1.2"
