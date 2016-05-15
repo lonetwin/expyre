@@ -63,6 +63,10 @@ class TestMain(unittest.TestCase):
             main('--unless-modified --unless-accessed --path @now+3days'.split())
         self.assert_('Missing path' in self.stderr.getvalue(), self.stderr.getvalue())
 
+    def test_invalid_timestamp(self):
+        main('-p /path/to/file @invalid'.split())
+        self.assertEqual('Timespec not recognized by at command', self.stderr.getvalue())
+
     def test_correct_invocation_expire_path_at_and_quotes(self):
         with mock.patch('expyre.__main__.expire_path', return_value=self.dummy_job) as mocked:
             main(['--unless-modified', '--unless-accessed', '--path', '/path/to/file', '@now + 3 days'])

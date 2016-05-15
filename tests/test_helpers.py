@@ -7,8 +7,9 @@ import unittest
 from datetime import datetime, timedelta
 from tempfile import mkstemp
 
-from expyre.helpers import open_expiring
+from expyre.helpers import expire_path
 from expyre.helpers import get_scheduled_jobs
+from expyre.helpers import open_expiring
 from expyre.helpers import remove_from_schedule
 
 
@@ -37,3 +38,7 @@ class TestOpenExpiring(unittest.TestCase):
         actual_expiry = scheduled_for_expiry[self.filename].timestamp
         # XXX atd only has only minute level precision
         self.assertLessEqual((expected_expiry - actual_expiry).seconds, 60)
+
+    def test_garbled_time(self):
+        self.assertRaisesRegexp(RuntimeError, 'Timespec not recognized',
+                                expire_path, self.filename, 'now+1hr')

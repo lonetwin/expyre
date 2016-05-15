@@ -132,7 +132,10 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
 
     log.debug('output: %s', stdout)
     if process.returncode != 0:
-        raise subprocess.CalledProcessError(process.returncode, atcmd)
+        if 'Garbled time' in stdout:
+            raise RuntimeError('Timespec not recognized by at command')
+        else:
+            raise subprocess.CalledProcessError(process.returncode, atcmd)
 
     match = jobid_re.search(stdout, re.MULTILINE)
     job_id = match.group('job_id')

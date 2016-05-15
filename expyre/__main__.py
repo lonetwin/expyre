@@ -60,29 +60,32 @@ def _parse_args(args):
 
 def main(args=None):
     ret = -1
-    args = _parse_args(args or sys.argv[1:])
-    if args.list:
-        # - list expiry schedule
-        jobs = get_scheduled_jobs()
-        if not jobs:
-            print('No paths scheduled for expiry')
-        for job in jobs.values():
-            print('{0.path} scheduled to expire at {0.timestamp:%F %R} {0.conditions}'.format(job))
-        ret = 0
-    elif args.reset:
-        # - remove path from expiry schedule
-        success, faliure = remove_from_schedule(args.reset)
-        print('Successfully removed these paths from expiry list:')
-        print('\n'.join(success))
-        if faliure:
-            print('Failed to remove these paths from expiry list:')
-            print('\n'.join(faliure))
-        ret = (0 if not faliure else -1)
-    else:
-        # - schedule path for expiry
-        job = expire_path(args.path, args.timespec, args.unless_modified, args.unless_accessed)
-        print('[{0.job_id}] {0.path} will expire at {0.timestamp:%F %R}'.format(job))
-        ret = 0
+    try:
+        args = _parse_args(args or sys.argv[1:])
+        if args.list:
+            # - list expiry schedule
+            jobs = get_scheduled_jobs()
+            if not jobs:
+                print('No paths scheduled for expiry')
+            for job in jobs.values():
+                print('{0.path} scheduled to expire at {0.timestamp:%F %R} {0.conditions}'.format(job))
+            ret = 0
+        elif args.reset:
+            # - remove path from expiry schedule
+            success, faliure = remove_from_schedule(args.reset)
+            print('Successfully removed these paths from expiry list:')
+            print('\n'.join(success))
+            if faliure:
+                print('Failed to remove these paths from expiry list:')
+                print('\n'.join(faliure))
+            ret = (0 if not faliure else -1)
+        else:
+            # - schedule path for expiry
+            job = expire_path(args.path, args.timespec, args.unless_modified, args.unless_accessed)
+            print('[{0.job_id}] {0.path} will expire at {0.timestamp:%F %R}'.format(job))
+            ret = 0
+    except RuntimeError as exc:
+        sys.stderr.write(exc)
 
     return ret
 
