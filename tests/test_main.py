@@ -3,7 +3,10 @@
 import sys
 import unittest
 from datetime import datetime
-from StringIO import StringIO
+try:
+    from io import StringIO
+except:
+    from StringIO import StringIO
 try:
     from unittest import mock
 except ImportError:
