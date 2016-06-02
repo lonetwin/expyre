@@ -6,6 +6,7 @@ Command-line for the expyre module.
 import argparse
 import logging
 import sys
+from operator import attrgetter
 
 from expyre import __version__
 from .helpers import expire_path, get_scheduled_jobs, remove_from_schedule
@@ -71,7 +72,7 @@ def main(args=None):
             jobs = get_scheduled_jobs()
             if not jobs:
                 print('No paths scheduled for expiry')
-            for job in jobs.values():
+            for job in sorted(jobs.values(), key=attrgetter('timestamp')):
                 print('{0.path} scheduled to expire at {0.timestamp:%F %R} {0.conditions}'.format(job))
             ret = 0
         elif args.reset:

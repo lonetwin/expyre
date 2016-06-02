@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 try:
     from StringIO import StringIO
 except:
@@ -129,3 +129,23 @@ class TestMain(unittest.TestCase):
             self.assertTrue(mocked.called)
             self.assertSequenceEqual('/path/to/file scheduled to expire at {0:%F %R} \n'.format(self.dummy_job.timestamp),
                                      sys.stdout.getvalue())
+
+    def test_correct_invocation_get_scheduled_jobs_multiple(self):
+        now = datetime.now()
+        later = datetime.now()+timedelta(hours=2)
+        earlier = datetime.now()-timedelta(hours=2)
+
+        jobs = {'/path/to/second': JobSpec(0, '/path/to/second', now, ''),
+                '/path/to/last':   JobSpec(1, '/path/to/last', later, ''),
+                '/path/to/first':  JobSpec(2, '/path/to/first', earlier, '')
+                }
+
+        self.maxDiff = None
+        with mock.patch('expyre.__main__.get_scheduled_jobs', return_value=jobs) as mocked:
+            main(['--list'])
+            self.assertTrue(mocked.called)
+            self.assertSequenceEqual(
+                    ('/path/to/first scheduled to expire at {0:%F %R} \n'
+                     '/path/to/second scheduled to expire at {1:%F %R} \n'
+                     '/path/to/last scheduled to expire at {2:%F %R} \n').format(earlier, now, later),
+                    sys.stdout.getvalue())
