@@ -4,9 +4,9 @@ import sys
 import unittest
 from datetime import datetime
 try:
-    from io import StringIO
-except:
     from StringIO import StringIO
+except:
+    from io import StringIO
 try:
     from unittest import mock
 except ImportError:
@@ -68,7 +68,7 @@ class TestMain(unittest.TestCase):
 
     def test_invalid_timestamp(self):
         main('-p /path/to/file @invalid'.split())
-        self.assertEqual('Timespec not recognized by at command', self.stderr.getvalue())
+        self.assertEqual('Timespec not recognized by at command\n', self.stderr.getvalue())
 
     def test_correct_invocation_expire_path_at_and_quotes(self):
         with mock.patch('expyre.__main__.expire_path', return_value=self.dummy_job) as mocked:
