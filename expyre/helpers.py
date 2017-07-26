@@ -52,14 +52,19 @@ jobid_re = re.compile(r'^job (?P<job_id>\d+) at (?P<timespec>.*)$', re.MULTILINE
 job_info_re = re.compile(r'(^\d+)\t(.*) (\w) (\w+)')
 
 
-def pre_exec_check():
+def pre_exec_check(verify_running=False):
     if not atcmd:
         raise RuntimeError("Could not find `at` command")
+
+    err_msg = ("The at daemon (atd) doesn't appear to be running."
+               " Expiry jobs cannot be scheduled or executed if atd is not running")
     try:
         output = subprocess.check_output('ps -e | grep atd', shell=True).strip()
-    except subprocess.CalledProcessError:
-        raise RuntimeError("The at daemon (atd) doesn't appear to be running."
-                           " Expiry jobs cannot be scheduled or executed if atd is not running")
+    except:
+        if verify_running:
+            raise RuntimeError(err_msg)
+        else:
+            log.warn(err_msg)
 
 
 at_call = functools.partial(subprocess.check_output, preexec_fn=pre_exec_check)
@@ -122,8 +127,8 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
                                     conditions=' ||\n'.join(conditions)
                                     )
 
+    pre_exec_check(verify_running=True)
     process = subprocess.Popen([atcmd, timespec],
-                               preexec_fn=pre_exec_check,
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT
