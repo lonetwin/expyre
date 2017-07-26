@@ -4,7 +4,9 @@
 import os
 import time
 import unittest
+
 from datetime import datetime, timedelta
+from io import IOBase
 from tempfile import mkstemp
 
 from expyre.helpers import expire_path
@@ -26,7 +28,7 @@ class TestOpenExpiring(unittest.TestCase):
     def test_open_expiring_default(self):
         """Test open_expiring contextmanager in default read mode"""
         with open_expiring(self.filename, at='now + 3days') as fd:
-            self.assertIsInstance(fd, file)
+            self.assertIsInstance(fd, IOBase)
             self.assertFalse(fd.closed)
             self.assertEqual(fd.mode, 'r')
 

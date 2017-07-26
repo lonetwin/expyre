@@ -67,17 +67,17 @@ at_call = functools.partial(subprocess.check_output, preexec_fn=pre_exec_check)
 
 def at_list():
     """List of all `at` scheduled jobs"""
-    return [job for job in at_call((atcmd, '-l')).split('\n') if job.strip()]
+    return [job for job in at_call((atcmd, '-l')).decode('utf-8').split('\n') if job.strip()]
 
 
 def at_cat(job_id):
     """Get the script of the scheduled job identified by `job_id`"""
-    return at_call((atcmd, '-c', job_id))
+    return at_call((atcmd, '-c', job_id)).decode('utf-8')
 
 
 def at_rm(job_id):
     """Remove the specified `job_id` from the `at` schedule"""
-    return at_call((atcmd, '-r', job_id))
+    return at_call((atcmd, '-r', job_id)).decode('utf-8')
 
 
 def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
@@ -128,7 +128,8 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT
                                )
-    stdout, _ = process.communicate(script)
+    stdout, _ = process.communicate(script.encode('utf-8'))
+    stdout = stdout.decode('utf-8')
 
     log.debug('output: %s', stdout)
     if process.returncode != 0:

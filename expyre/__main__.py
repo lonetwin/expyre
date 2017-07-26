@@ -90,7 +90,7 @@ def main(args=None):
             print('[{0.job_id}] {0.path} will expire at {0.timestamp:%F %R}'.format(job))
             ret = 0
     except RuntimeError as exc:
-        sys.stderr.write(exc.message + '\n')
+        sys.stderr.write(str(exc) + '\n')
 
     return ret
 
