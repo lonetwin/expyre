@@ -149,16 +149,20 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
     return JobSpec(job_id, path, timestamp, ' or '.join(as_string))
 
 
-def get_scheduled_jobs():
+def get_scheduled_jobs(prefix=None):
     """Return a map of paths to JobSpec for all paths scheduled for expiry.
     """
     jobs = {}
+    if prefix:
+        prefix = os.path.abspath(os.path.expanduser(prefix))
     for job in at_list():
         job_id, timespec, queue, user = re.search(job_info_re, job).groups()
         job_spec = at_cat(job_id)
         match = SCRIPT_RE.search(job_spec)
         if match:
             path, conditions, _, _ = match.groups()
+            if prefix and not path.startswith(prefix):
+                continue
             timestamp = datetime.strptime(timespec, '%c')
             jobs[path] = JobSpec(job_id, path, timestamp, conditions)
     return jobs
