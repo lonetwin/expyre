@@ -149,3 +149,9 @@ class TestMain(unittest.TestCase):
                      '/path/to/second scheduled to expire at {1:%F %R} \n'
                      '/path/to/last scheduled to expire at {2:%F %R} \n').format(earlier, now, later),
                     sys.stdout.getvalue())
+
+    def test_correct_invocation_get_scheduled_jobs_with_prefix_no_jobs(self):
+        with mock.patch('expyre.__main__.get_scheduled_jobs', return_value={}) as mocked:
+            main(['--list-in', '/path'])
+            self.assertTrue(mocked.called)
+            self.assertSequenceEqual('No paths scheduled for expiry under /path\n', self.stdout.getvalue())
