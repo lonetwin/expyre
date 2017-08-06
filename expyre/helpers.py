@@ -52,14 +52,19 @@ jobid_re = re.compile(r'^job (?P<job_id>\d+) at (?P<timespec>.*)$', re.MULTILINE
 job_info_re = re.compile(r'(^\d+)\t(.*) (\w) (\w+)')
 
 
-def pre_exec_check():
+def pre_exec_check(verify_running=False):
     if not atcmd:
         raise RuntimeError("Could not find `at` command")
+
+    err_msg = ("The at daemon (atd) doesn't appear to be running."
+               " Expiry jobs cannot be scheduled or executed if atd is not running")
     try:
         output = subprocess.check_output('ps -e | grep atd', shell=True).strip()
-    except subprocess.CalledProcessError:
-        raise RuntimeError("The at daemon (atd) doesn't appear to be running."
-                           " Expiry jobs cannot be scheduled or executed if atd is not running")
+    except:
+        if verify_running:
+            raise RuntimeError(err_msg)
+        else:
+            log.warn(err_msg)
 
 
 at_call = functools.partial(subprocess.check_output, preexec_fn=pre_exec_check)
@@ -67,17 +72,17 @@ at_call = functools.partial(subprocess.check_output, preexec_fn=pre_exec_check)
 
 def at_list():
     """List of all `at` scheduled jobs"""
-    return [job for job in at_call((atcmd, '-l')).split('\n') if job.strip()]
+    return [job for job in at_call((atcmd, '-l')).decode('utf-8').split('\n') if job.strip()]
 
 
 def at_cat(job_id):
     """Get the script of the scheduled job identified by `job_id`"""
-    return at_call((atcmd, '-c', job_id))
+    return at_call((atcmd, '-c', job_id)).decode('utf-8')
 
 
 def at_rm(job_id):
     """Remove the specified `job_id` from the `at` schedule"""
-    return at_call((atcmd, '-r', job_id))
+    return at_call((atcmd, '-r', job_id)).decode('utf-8')
 
 
 def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
@@ -122,13 +127,14 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
                                     conditions=' ||\n'.join(conditions)
                                     )
 
+    pre_exec_check(verify_running=True)
     process = subprocess.Popen([atcmd, timespec],
-                               preexec_fn=pre_exec_check,
                                stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT
                                )
-    stdout, _ = process.communicate(script)
+    stdout, _ = process.communicate(script.encode('utf-8'))
+    stdout = stdout.decode('utf-8')
 
     log.debug('output: %s', stdout)
     if process.returncode != 0:
@@ -143,16 +149,20 @@ def expire_path(path, timespec, unless_modified=True, unless_accessed=True):
     return JobSpec(job_id, path, timestamp, ' or '.join(as_string))
 
 
-def get_scheduled_jobs():
+def get_scheduled_jobs(prefix=None):
     """Return a map of paths to JobSpec for all paths scheduled for expiry.
     """
     jobs = {}
+    if prefix:
+        prefix = os.path.abspath(os.path.expanduser(prefix))
     for job in at_list():
         job_id, timespec, queue, user = re.search(job_info_re, job).groups()
         job_spec = at_cat(job_id)
         match = SCRIPT_RE.search(job_spec)
         if match:
             path, conditions, _, _ = match.groups()
+            if prefix and not path.startswith(prefix):
+                continue
             timestamp = datetime.strptime(timespec, '%c')
             jobs[path] = JobSpec(job_id, path, timestamp, conditions)
     return jobs

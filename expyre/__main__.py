@@ -5,6 +5,7 @@ Command-line for the expyre module.
 """
 import argparse
 import logging
+import os
 import sys
 from operator import attrgetter
 
@@ -18,8 +19,9 @@ def _parse_args(args):
                 usage="\n  %(prog)s [-h] [--version]"
                       "\n  %(prog)s [-m] [-a] -p path @TIMESPEC"
                       "\n  %(prog)s -l"
-                      "\n  %(prog)s -r path",
-                epilog="Timespec eg: "
+                      "\n  %(prog)s -L [directory]"
+                      "\n  %(prog)s -r path [path ...]",
+                epilog="Timespec examples: "
                        "now+2days, 18:00 tomorrow, 18:00 2017-12-31, 5pm Friday"
                        )
 
@@ -38,6 +40,10 @@ def _parse_args(args):
 
     atq_group.add_argument('-l', '--list', action='store_true', default=False,
             help='List paths scheduled for expiry')
+    atq_group.add_argument('-L', '--list-in', action='store', nargs='?',
+                           const=os.path.abspath(os.getcwd()),
+                           metavar='directory', default='',
+            help='List paths scheduled for expiry within directory')
 
     atrm_group.add_argument('-r', '--reset', nargs='+', metavar='path',
             help='Remove specified paths from expiry schedule')
@@ -45,13 +51,13 @@ def _parse_args(args):
     args = parser.parse_args(args or sys.argv[1:])
 
     # - arguments from only one arg group can be provided at a time
-    if any((args.list and any((args.unless_modified, args.unless_accessed, args.path)),
+    if any(((args.list or args.list_in) and any((args.unless_modified, args.unless_accessed, args.path)),
+            (args.list or args.list_in) and (args.reset is not None),
             args.reset and any((args.unless_modified, args.unless_accessed, args.path)),
-            args.list and (args.reset is not None),
             )):
         parser.error("Conflicting options provided; "
                      "you can either schedule paths for deletion or list or reset")
-    if not (args.list or args.reset):
+    if not any((args.list, args.list_in, args.reset)):
         # - if the scheduling options were specified, ensure we have
         # both path and timespec
         timespec = ''.join(s.strip("@ ") for s in vars(args)['@'])
@@ -66,12 +72,14 @@ def _parse_args(args):
 def main(args=None):
     ret = -1
     try:
-        args = _parse_args(args or sys.argv[1:])
-        if args.list:
+        args = _parse_args(args)
+        if args.list or args.list_in:
             # - list expiry schedule
-            jobs = get_scheduled_jobs()
+            jobs = get_scheduled_jobs(args.list_in)
             if not jobs:
-                print('No paths scheduled for expiry')
+                msg = 'No paths scheduled for expiry{}'.format(' under {}'.format(args.list_in)
+                                                               if args.list_in else '')
+                print(msg)
             for job in sorted(jobs.values(), key=attrgetter('timestamp')):
                 print('{0.path} scheduled to expire at {0.timestamp:%F %R} {0.conditions}'.format(job))
             ret = 0
@@ -90,9 +98,9 @@ def main(args=None):
             print('[{0.job_id}] {0.path} will expire at {0.timestamp:%F %R}'.format(job))
             ret = 0
     except RuntimeError as exc:
-        sys.stderr.write(exc.message + '\n')
+        sys.stderr.write(str(exc) + '\n')
 
     return ret
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
